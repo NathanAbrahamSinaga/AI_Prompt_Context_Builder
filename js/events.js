@@ -363,65 +363,98 @@ function handleGlobalKeyDown(event) {
     }
 }
 
-// --- Drag and Drop Handlers ---
+// --- Drag and Drop Handlers (Updated) ---
+
+function clearDragIndicators() {
+    fileListElement.querySelectorAll('.drag-over, .drag-over-top, .drag-over-bottom')
+        .forEach(el => el.classList.remove('drag-over', 'drag-over-top', 'drag-over-bottom'));
+}
+
 function handleDragStart(event) {
     const listItem = event.target.closest('.list-item');
     if (!listItem) return;
     draggedItemId = parseInt(listItem.dataset.id);
+    event.dataTransfer.effectAllowed = 'move';
     setTimeout(() => listItem.classList.add('dragging'), 0);
 }
 
 function handleDragEnd() {
+    clearDragIndicators();
     const draggingElement = fileListElement.querySelector('.dragging');
     if (draggingElement) {
         draggingElement.classList.remove('dragging');
     }
+    draggedItemId = null;
 }
 
 function handleDragOver(event) {
     event.preventDefault();
-    fileListElement.querySelectorAll('.drag-over').forEach(el => el.classList.remove('drag-over'));
-    const listItem = event.target.closest('.list-item');
-    if (listItem && listItem.dataset.type === 'folder') {
-        listItem.classList.add('drag-over');
+    const targetListItem = event.target.closest('.list-item');
+    if (!targetListItem) {
+        clearDragIndicators();
+        return;
     }
-}
 
-function handleDragLeave(event) {
-    event.target.closest('.list-item')?.classList.remove('drag-over');
+    const targetId = parseInt(targetListItem.dataset.id);
+    if (targetId === draggedItemId) return;
+
+    clearDragIndicators();
+
+    const rect = targetListItem.getBoundingClientRect();
+    const offsetY = event.clientY - rect.top;
+    const height = rect.height;
+    const hotzoneRatio = 0.3; // 30% area top and bottom for reordering
+
+    if (offsetY < height * hotzoneRatio) {
+        targetListItem.classList.add('drag-over-top');
+    } else if (offsetY > height * (1 - hotzoneRatio) && targetListItem.dataset.type === 'folder') {
+        targetListItem.classList.add('drag-over'); // Highlight folder for dropping inside
+    } else {
+        targetListItem.classList.add('drag-over-bottom');
+    }
 }
 
 function handleDrop(event) {
     event.preventDefault();
     event.stopPropagation();
-    fileListElement.querySelectorAll('.drag-over').forEach(el => el.classList.remove('drag-over'));
-    
+
+    if (draggedItemId === null) return;
+
+    const dropTargetEl = fileListElement.querySelector('.drag-over, .drag-over-top, .drag-over-bottom');
     const draggedItem = findItemById(draggedItemId);
+
     if (!draggedItem) return;
-    
-    const targetListItem = event.target.closest('.list-item');
+
+    // 1. Remove the item from its original position
     const originalParent = findParentOf(draggedItemId);
-    
-    if (!targetListItem && !originalParent) return;
+    const sourceList = originalParent ? originalParent.children : fileSystem;
+    const itemIndex = sourceList.findIndex(child => child.id === draggedItemId);
+    sourceList.splice(itemIndex, 1);
 
-    const parentRegistry = originalParent ? originalParent.children : fileSystem;
-    const itemIndex = parentRegistry.findIndex(child => child.id === draggedItemId);
+    // 2. Add the item to its new position
+    if (dropTargetEl) {
+        const targetId = parseInt(dropTargetEl.dataset.id);
+        const targetParent = findParentOf(targetId);
+        const destinationList = targetParent ? targetParent.children : fileSystem;
+        const targetIndex = destinationList.findIndex(item => item.id === targetId);
 
-    if (itemIndex > -1) {
-        parentRegistry.splice(itemIndex, 1);
-    }
-
-    if (targetListItem) {
-        const targetFolder = findItemById(parseInt(targetListItem.dataset.id));
-        if (targetFolder?.type === 'folder' && targetFolder.id !== draggedItemId) {
-            targetFolder.children.push(draggedItem);
-            targetFolder.isCollapsed = false;
-        } else {
-            parentRegistry.splice(itemIndex, 0, draggedItem);
+        if (dropTargetEl.classList.contains('drag-over')) { // Drop into folder
+            const targetFolder = findItemById(targetId);
+            if (targetFolder && targetFolder.type === 'folder') {
+                targetFolder.children.push(draggedItem);
+                targetFolder.isCollapsed = false;
+            }
+        } else if (dropTargetEl.classList.contains('drag-over-top')) { // Drop above item
+            destinationList.splice(targetIndex, 0, draggedItem);
+        } else if (dropTargetEl.classList.contains('drag-over-bottom')) { // Drop below item
+            destinationList.splice(targetIndex + 1, 0, draggedItem);
         }
     } else {
+        // Fallback: drop at the root if no specific target
         fileSystem.push(draggedItem);
     }
+    
+    clearDragIndicators();
     renderFileSystem();
 }
 
