@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Prompt Context Builder</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-okaidia.min.css">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="container">
+        <div class="sidebar" id="sidebar">
+            <div class="panel-header">
+                <div class="sidebar-actions">
+                    <button id="add-file-btn" class="action-btn" title="Tambah File Baru">📄</button>
+                    <button id="add-folder-btn" class="action-btn" title="Tambah Folder Baru">📁</button>
+                    <button id="import-btn" class="action-btn" title="Impor dari Teks">📥</button>
+                    <button id="export-btn" class="action-btn" title="Simpan & Ekspor ke Teks">📋</button>
+                    <button id="rebuild-ids-btn" class="action-btn" title="Perbaiki & Rebuild ID">🛠️</button>
+                    <button id="reset-btn" class="action-btn" title="Reset Proyek">🗑️</button>
+                    <button id="theme-toggle-btn" class="action-btn" title="Ganti Tema">☀️</button>
+                    <button id="help-btn" class="action-btn" title="Bantuan & Info">❓</button>
+                </div>
+            </div>
+            <ul id="file-list" class="panel-content"></ul>
+        </div>
+
+        <div class="resizer-v" id="resizer"></div>
+
+        <div class="editor-area">
+            <div class="editor-header">
+                <h3 id="current-file-name">Pilih file untuk diedit</h3>
+                <button id="save-project-btn" class="btn btn-save" title="Ctrl+S">Save</button>
+            </div>
+            
+            <div id="editor-placeholder" class="editor-placeholder">
+                <h2>✨ AI Context Builder</h2>
+                <p>Pilih file untuk mulai mengedit,<br>atau buat file/folder baru.</p>
+            </div>
+            
+            <div id="editor-wrapper">
+                <textarea id="editor-input" spellcheck="false" autocapitalize="off" autocomplete="off" autocorrect="off"></textarea>
+                <pre id="editor-display" class="line-numbers" aria-hidden="true"><code id="editor-output"></code></pre>
+            </div>
+        </div>
+    </div>
+
+    <div id="context-menu" class="context-menu">
+        <ul><li data-action="rename">Ubah Nama</li><li data-action="delete" class="delete">Hapus</li><hr><li data-action="new-file">File Baru</li><li data-action="new-folder">Folder Baru</li></ul>
+    </div>
+    <div id="modal-overlay" class="modal-overlay">
+        <div class="modal-box"><h2 id="modal-title"></h2><div id="modal-body" class="modal-body"></div><div class="modal-footer"><button id="modal-cancel-btn" class="btn btn-secondary">Batal</button><button id="modal-confirm-btn" class="btn btn-primary">OK</button></div></div>
+    </div>
+    <div id="toast-container"></div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-core.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/plugins/autoloader/prism-autoloader.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/plugins/line-numbers/prism-line-numbers.min.js"></script>
+    
+    <script src="js/dom.js"></script>
+    <script src="js/state.js"></script>
+    <script src="js/fileSystem.js"></script>
+    <script src="js/ui.js"></script>
+    <script src="js/io.js"></script>
+    <script src="js/events.js"></script>
+    <script src="js/main.js"></script>
+</body>
+</html>
